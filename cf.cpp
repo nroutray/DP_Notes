@@ -7,31 +7,68 @@ using namespace std;
 const ll MOD = 1e9 + 7;
 const ll INF = 1e9;
  
- int dp[4001];
  
-int rec(int len, vector<int>& cuts) {
-    if(len==0) return 0;
-    if(dp[len]!=-1) return dp[len];
-    
-    int temp=INT_MIN;
-    for(int i=0;i<3;i++){
-        if(len-cuts[i]>=0){
-            temp=max(temp,1+rec(len-cuts[i],cuts));
+vector<int> predictAnswer(vector<int>& stockData, vector<int>& queries) {
+    int n = stockData.size();
+    vector<int> pse(n, -1), nse(n, -1);
+    stack<int> st;
+
+    for (int i = 0; i < n; ++i) {
+        while (!st.empty() && stockData[st.top()] >= stockData[i]) {
+            st.pop();
+        }
+        if (!st.empty()) {
+            pse[i] = st.top();
+        }
+        st.push(i);
+    }
+
+    while (!st.empty()) st.pop();
+
+    for (int i = n - 1; i >= 0; --i) {
+        while (!st.empty() && stockData[st.top()] >= stockData[i]) {
+            st.pop();
+        }
+        if (!st.empty()) {
+            nse[i] = st.top();
+        }
+        st.push(i);
+    }
+
+    vector<int> res;
+    for (int query : queries) {
+        int i = query - 1;
+        int left = pse[i];
+        int right = nse[i];
+
+        if (left == -1 && right == -1) {
+            res.push_back(-1);
+        } else if (left == -1) {
+            res.push_back(right + 1);
+        } else if (right == -1) {
+            res.push_back(left + 1); 
+        } else {
+            int dl = abs(i - left);
+            int dr = abs(i - right);
+            if (dl <= dr) {
+                res.push_back(left + 1); 
+            } else {
+                res.push_back(right + 1);
+            }
         }
     }
 
-    return dp[len]=temp;
-    
+    return res;
 }
  
 int main() {
     ios_base::sync_with_stdio(0);
     cin.tie(0); cout.tie(0);
-    int n,a,b,c;
-    cin>>n>>a>>b>>c;
-    vector<int> cuts ={a,b,c};
-    memset(dp,-1,sizeof(dp));
-    cout<<rec(n,cuts);
+    vector<int> stockData = {2, 1, 3};
+    vector<int> queries = {2, 1};
+    vector<int> res=predictAnswer(stockData,queries);
+
+    for(auto it:res) cout<<it<<" ";
 
 
     return 0;
